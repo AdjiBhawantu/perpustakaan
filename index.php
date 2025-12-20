@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LibraryHub - Sistem Peminjaman Buku Digital</title>
+    <title>Perpustakaan - Sistem Peminjaman Buku Digital</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body>
     <nav id="navbar">
         <a href="#" class="logo">
-            📖 LibraryHub
+            📖 Perpustakaan
         </a>
         <div class="nav-container">
             <ul class="nav-links">
@@ -20,7 +20,7 @@
                 <li><a href="#popular">Buku Terpopuler</a></li>
                 <li><a href="#about">About</a></li>
             </ul>
-            <a href="#login" class="login-btn">Login</a>
+            <a href="login.php" class="login-btn">Login</a>
         </div>
         <div class="mobile-menu-btn" id="mobileMenuBtn">
             <span></span>
