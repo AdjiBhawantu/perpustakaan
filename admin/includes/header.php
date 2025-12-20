@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>LibraryHub Admin</title>
+    <title>Perpustakaan Admin</title>
 
     <link rel="stylesheet" href="vendors/mdi/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="vendors/feather/feather.css">
@@ -346,9 +346,10 @@
         <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
             <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
                 <a class="navbar-brand brand-logo" href="index.php">
-                    <i class="mdi mdi-book-open-page-variant mr-2"></i>LibraryHub
+                    <i class="mdi mdi-book-open-page-variant mr-2"></i>Perpustakaan
                 </a>
-                <a class="navbar-brand brand-logo-mini" href="index.php">LH</a>
+                <a class="navbar-brand brand-logo-mini" href="index.php"><i
+                        class="mdi mdi-book-open-page-variant mr-2"></i></a>
             </div>
 
             <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">

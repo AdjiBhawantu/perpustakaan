@@ -139,7 +139,7 @@ include 'includes/header.php';
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3>Halo, <?php echo $_SESSION['nama']; ?>! 👋</h3>
-                    <p>Selamat datang di panel admin LibraryHub. Anda memiliki <b><?php echo $total_pending; ?></b>
+                    <p>Selamat datang di panel admin Perpustakaan. Anda memiliki <b><?php echo $total_pending; ?></b>
                         anggota baru yang menunggu verifikasi.</p>
                 </div>
                 <div class="d-none d-md-block">
