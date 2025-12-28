@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Cek jika user sudah login, langsung arahkan ke halaman yang sesuai
+// Cek jika user sudah login
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['user_type'] == 'Admin') {
         header("Location: admin/index.php");
@@ -17,7 +17,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login & Register - Perpustakaan</title>
+    <title>Login & Register - LibraryHub</title>
     <style>
     /* --- 1. VARIABLE & RESET --- */
     :root {
@@ -29,13 +29,14 @@ if (isset($_SESSION['user_id'])) {
         --white: #ffffff;
         --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-        /* Warna Alert */
-        --danger-bg: #fee2e2;
-        --danger-text: #dc2626;
-        --danger-border: #fca5a5;
+        /* Warna Notifikasi */
+        --error-bg: #fee2e2;
+        --error-border: #fecaca;
+        --error-text: #991b1b;
+
         --success-bg: #dcfce7;
-        --success-text: #16a34a;
-        --success-border: #86efac;
+        --success-border: #bbf7d0;
+        --success-text: #166534;
     }
 
     * {
@@ -55,31 +56,54 @@ if (isset($_SESSION['user_id'])) {
         padding: 2rem;
     }
 
-    /* --- 2. ALERT NOTIFICATION (BARU) --- */
-    .alert {
-        width: 100%;
-        padding: 12px 16px;
-        margin-bottom: 20px;
-        border-radius: 10px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        line-height: 1.4;
+    /* --- 2. NOTIFICATION CARD --- */
+    .notification-card {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
         display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: fadeInDown 0.4s ease;
+        align-items: flex-start;
+        gap: 12px;
+        animation: slideInDown 0.5s ease-out;
+        border-left: 5px solid transparent;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
 
-    .alert-danger {
-        background-color: var(--danger-bg);
-        color: var(--danger-text);
-        border: 1px solid var(--danger-border);
+    .notification-card.error {
+        background-color: var(--white);
+        color: var(--error-text);
+        border-left-color: #ef4444;
+        background-image: linear-gradient(to right, var(--error-bg), #fff);
     }
 
-    .alert-success {
-        background-color: var(--success-bg);
+    .notification-card.success {
+        background-color: var(--white);
         color: var(--success-text);
-        border: 1px solid var(--success-border);
+        border-left-color: #22c55e;
+        background-image: linear-gradient(to right, var(--success-bg), #fff);
+    }
+
+    .notification-icon {
+        font-size: 1.2rem;
+        margin-top: -2px;
+    }
+
+    .notification-content {
+        flex: 1;
+        line-height: 1.5;
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* --- 3. NAVIGASI --- */
@@ -118,9 +142,8 @@ if (isset($_SESSION['user_id'])) {
         position: relative;
         overflow: hidden;
         width: 100%;
-        max-width: 850px;
-        min-height: 600px;
-        /* Sedikit ditambah tinggi min-nya */
+        max-width: 900px;
+        min-height: 650px;
         animation: fadeInUp 0.8s ease-out;
     }
 
@@ -144,6 +167,30 @@ if (isset($_SESSION['user_id'])) {
         display: flex;
         flex-direction: column;
         justify-content: center;
+        /* Tambahan agar form panjang bisa discroll */
+        height: 100%;
+        max-height: 700px;
+        /* Batas tinggi */
+        overflow-y: auto;
+        /* Scroll jika konten panjang */
+    }
+
+    /* Custom Scrollbar */
+    .form-panel::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .form-panel::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .form-panel::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+
+    .form-panel::-webkit-scrollbar-thumb:hover {
+        background: #aaa;
     }
 
     /* --- 7. ELEMEN FORM --- */
@@ -164,30 +211,48 @@ if (isset($_SESSION['user_id'])) {
         line-height: 1.5;
     }
 
+    .input-row {
+        display: flex;
+        gap: 15px;
+    }
+
+    .input-row .input-group {
+        flex: 1;
+    }
+
     .input-group {
         position: relative;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.2rem;
     }
 
     .input-group label {
         display: block;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
         color: var(--text-main);
         font-weight: 600;
         font-size: 0.9rem;
     }
 
-    .input-group input {
+    .input-group input,
+    .input-group select,
+    .input-group textarea {
         width: 100%;
         padding: 12px 16px;
         border: 2px solid #e2e8f0;
         border-radius: 10px;
-        font-size: 1rem;
+        font-size: 0.95rem;
         transition: all 0.3s;
         background: #f7fafc;
+        font-family: inherit;
     }
 
-    .input-group input:focus {
+    .input-group textarea {
+        resize: vertical;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus,
+    .input-group textarea:focus {
         outline: none;
         border-color: var(--primary);
         background: var(--white);
@@ -206,6 +271,8 @@ if (isset($_SESSION['user_id'])) {
         cursor: pointer;
         transition: transform 0.2s, box-shadow 0.2s;
         margin-top: 10px;
+        margin-bottom: 20px;
+        /* Space bawah */
     }
 
     .btn-submit:hover {
@@ -220,9 +287,10 @@ if (isset($_SESSION['user_id'])) {
     /* --- 8. FOOTER TOGGLE --- */
     .toggle-area {
         text-align: center;
-        margin-top: 2rem;
+        margin-top: 1rem;
         color: var(--text-sub);
         font-size: 0.95rem;
+        padding-bottom: 20px;
     }
 
     .toggle-link {
@@ -239,7 +307,7 @@ if (isset($_SESSION['user_id'])) {
         color: var(--primary-dark);
     }
 
-    /* --- 9. ANIMASI --- */
+    /* --- 9. ANIMASI & RESPONSIVE --- */
     @keyframes fadeInDown {
         from {
             opacity: 0;
@@ -264,7 +332,6 @@ if (isset($_SESSION['user_id'])) {
         }
     }
 
-    /* --- 10. RESPONSIVE --- */
     @media (max-width: 768px) {
         body {
             padding: 1rem;
@@ -272,6 +339,8 @@ if (isset($_SESSION['user_id'])) {
 
         .form-panel {
             padding: 2rem;
+            max-width: 100%;
+            flex: 0 0 100%;
         }
 
         .header-title {
@@ -280,6 +349,11 @@ if (isset($_SESSION['user_id'])) {
 
         .container {
             min-height: auto;
+        }
+
+        .input-row {
+            flex-direction: column;
+            gap: 0;
         }
     }
     </style>
@@ -295,18 +369,26 @@ if (isset($_SESSION['user_id'])) {
         <div class="form-slider">
 
             <div class="form-panel">
-                <div class="header-title">📖 Perpustakaan</div>
+                <div class="header-title">📖 LibraryHub</div>
                 <p class="header-sub">Selamat datang kembali! Silakan masuk untuk mengakses koleksi buku digital.</p>
 
                 <?php if (isset($_SESSION['error_login'])): ?>
-                <div class="alert alert-danger">
-                    ⚠️ <?php echo $_SESSION['error_login']; unset($_SESSION['error_login']); ?>
+                <div class="notification-card error">
+                    <span class="notification-icon">⚠️</span>
+                    <span class="notification-content">
+                        <b>Login Gagal</b><br>
+                        <?php echo $_SESSION['error_login']; unset($_SESSION['error_login']); ?>
+                    </span>
                 </div>
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['success_register'])): ?>
-                <div class="alert alert-success">
-                    ✅ <?php echo $_SESSION['success_register']; unset($_SESSION['success_register']); ?>
+                <div class="notification-card success">
+                    <span class="notification-icon">✅</span>
+                    <span class="notification-content">
+                        <b>Registrasi Berhasil!</b><br>
+                        <?php echo $_SESSION['success_register']; unset($_SESSION['success_register']); ?>
+                    </span>
                 </div>
                 <?php endif; ?>
 
@@ -342,36 +424,68 @@ if (isset($_SESSION['user_id'])) {
 
             <div class="form-panel">
                 <div class="header-title">✨ Member Baru</div>
-                <p class="header-sub">Bergabunglah sekarang untuk meminjam buku secara gratis dan mudah.</p>
+                <p class="header-sub">Lengkapi data diri Anda untuk menjadi anggota perpustakaan.</p>
 
                 <?php if (isset($_SESSION['error_register'])): ?>
-                <div class="alert alert-danger">
-                    ⚠️ <?php echo $_SESSION['error_register']; unset($_SESSION['error_register']); ?>
+                <div class="notification-card error">
+                    <span class="notification-icon">🚫</span>
+                    <span class="notification-content">
+                        <b>Gagal Mendaftar</b><br>
+                        <?php echo $_SESSION['error_register']; unset($_SESSION['error_register']); ?>
+                    </span>
                 </div>
                 <?php endif; ?>
 
                 <form action="proses_daftar.php" method="POST">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" name="new_username" placeholder="Buat username unik" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" name="new_password" placeholder="Min. 8 karakter" required>
+                        </div>
+                    </div>
+
                     <div class="input-group">
                         <label>Nama Lengkap</label>
                         <input type="text" name="fullname" placeholder="Sesuai KTP / Kartu Pelajar" required>
                     </div>
 
-                    <div class="input-group">
-                        <label>Email</label>
-                        <input type="email" name="email" placeholder="Contoh: email@anda.com" required>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>NIK / No. KTP</label>
+                            <input type="number" name="nik" placeholder="16 digit NIK" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Jenis Kelamin</label>
+                            <select name="gender" required>
+                                <option value="">- Pilih -</option>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Email</label>
+                            <input type="email" name="email" placeholder="email@contoh.com" required>
+                        </div>
+                        <div class="input-group">
+                            <label>No. Telepon / WA</label>
+                            <input type="number" name="no_telp" placeholder="08xxxxxxxxxx" required>
+                        </div>
                     </div>
 
                     <div class="input-group">
-                        <label>Username</label>
-                        <input type="text" name="new_username" placeholder="Buat username unik" required>
+                        <label>Alamat Lengkap</label>
+                        <textarea name="alamat" rows="2" placeholder="Jalan, RT/RW, Kelurahan, Kecamatan..."
+                            required></textarea>
                     </div>
 
-                    <div class="input-group">
-                        <label>Password</label>
-                        <input type="password" name="new_password" placeholder="Minimal 8 karakter" required>
-                    </div>
-
-                    <button type="submit" class="btn-submit">🚀 Buat Akun</button>
+                    <button type="submit" class="btn-submit">🚀 Daftar Sekarang</button>
                 </form>
 
                 <div class="toggle-area">

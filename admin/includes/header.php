@@ -437,7 +437,7 @@
                                 <li class="nav-item"> <a class="nav-link" href="anggota_verifikasi.php">Verifikasi <span
                                             class="badge badge-primary ml-2"
                                             style="background:var(--primary)">Baru</span></a></li>
-                                <li class="nav-item"> <a class="nav-link" href="anggota_detail.php">Cari Anggota</a>
+                                <li class="nav-item"> <a class="nav-link" href="cari_anggota.php">Cari Anggota</a>
                                 </li>
                             </ul>
                         </div>
