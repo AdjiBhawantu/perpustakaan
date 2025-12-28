@@ -207,6 +207,7 @@ function hapus_anggota($id, $admin_id) {
     }
     return false;
 }
+
 // ==========================================
 // === SISTEM SUSPEND & REAKTIVASI ===
 // ==========================================
@@ -215,21 +216,16 @@ function hapus_anggota($id, $admin_id) {
 function update_status_anggota($id_anggota, $status_baru, $alasan, $admin_id) {
     global $conn;
     
-    // Status Akun di Database biasanya: 'Aktif' atau 'Nonaktif'
-    // Kita anggap 'Nonaktif' sebagai Suspend/Blokir
-    
+    // Update status akun
     $stmt = $conn->prepare("UPDATE anggota SET Status_Akun = ? WHERE Id_Anggota = ?");
     $stmt->bind_param("ss", $status_baru, $id_anggota);
     
     if ($stmt->execute()) {
-        // Catat ke Log Aktivitas sebagai Riwayat
+        // Catat ke Log Aktivitas
         $aktivitas = ($status_baru == 'Nonaktif') ? 'Suspend Anggota' : 'Reaktivasi Anggota';
         $deskripsi = "Mengubah status menjadi $status_baru. Alasan: $alasan";
         
         catat_log('Admin', $admin_id, $aktivitas, $deskripsi);
-        
-        // Opsional: Kita juga bisa catat log spesifik ke user tersebut agar muncul di history mereka
-        // Tapi sistem log kita sudah cukup dengan memfilter User_Id nanti.
         return true;
     }
     return false;
@@ -238,16 +234,177 @@ function update_status_anggota($id_anggota, $status_baru, $alasan, $admin_id) {
 // 2. Ambil Riwayat Status (Log Spesifik User)
 function ambil_riwayat_status($id_anggota) {
     global $conn;
-    // Ambil log yang berkaitan dengan user ini DAN aktivitasnya tentang status
+    // Menggunakan ORDER BY Created_At (Bukan Tanggal, karena di log_aktivitas namanya Created_At)
     $sql = "SELECT * FROM log_aktivitas 
             WHERE Deskripsi LIKE '%$id_anggota%' 
             OR (Aktivitas IN ('Suspend Anggota', 'Reaktivasi Anggota', 'Registrasi', 'Approve Anggota') AND Deskripsi LIKE '%$id_anggota%')
             ORDER BY Created_At DESC";
-            
-    // PENTING: Karena log kita mencatat User_ID si PELAKU (Admin), kita harus cari di deskripsi 
-    // atau kita modifikasi pencatatan lognya. 
-    // Agar aman dengan struktur sekarang, kita cari log admin yang DESKRIPSI-nya mengandung ID Anggota ini.
     
     return $conn->query($sql);
+}
+
+// ==========================================
+// === SISTEM MANAJEMEN BUKU & STOK ===
+// ==========================================
+
+// 1. Generate ID Buku Otomatis (BK-AngkaRandom)
+function generate_id_buku() {
+    return "BK-" . date("ymd") . rand(100, 999);
+}
+
+// 2. Generate ID Kategori Otomatis (KAT-AngkaRandom)
+function generate_id_kategori() {
+    return "KAT-" . date("ymd") . rand(100, 999);
+}
+
+// 3. Ambil Semua Kategori
+function ambil_kategori() {
+    global $conn;
+    return $conn->query("SELECT * FROM kategori_buku ORDER BY Nama_Kategori ASC");
+}
+
+// 4. Upload Cover Buku
+function upload_cover($file) {
+    $target_dir = "../uploads/buku/";
+    
+    // Buat folder jika belum ada
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0777, true);
+    }
+
+    $filename = time() . "_" . basename($file["name"]);
+    $target_file = $target_dir . $filename;
+    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+
+    // Validasi
+    $check = getimagesize($file["tmp_name"]);
+    if($check === false) return false; // Bukan gambar
+    if($file["size"] > 2000000) return false; // Max 2MB
+    if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg") return false;
+
+    if (move_uploaded_file($file["tmp_name"], $target_file)) {
+        return $filename;
+    }
+    return false;
+}
+
+// 5. Update Stok Buku (Transaksi)
+function update_stok_buku($id_buku, $jenis_transaksi, $jumlah, $keterangan, $admin_id) {
+    global $conn;
+    
+    // Ambil data buku saat ini
+    $q = $conn->query("SELECT Jumlah_Total, Jumlah_Tersedia FROM buku WHERE Id_Buku = '$id_buku'");
+    $buku = $q->fetch_assoc();
+    
+    if (!$buku) return false;
+
+    $total_baru = $buku['Jumlah_Total'];
+    $tersedia_baru = $buku['Jumlah_Tersedia'];
+
+    // Logika Perubahan Stok
+    if ($jenis_transaksi == 'Tambah') {
+        $total_baru += $jumlah;
+        $tersedia_baru += $jumlah;
+    } elseif ($jenis_transaksi == 'Kurang' || $jenis_transaksi == 'Rusak' || $jenis_transaksi == 'Hilang') {
+        $total_baru -= $jumlah;
+        $tersedia_baru -= $jumlah;
+    }
+    // Perbaikan: Tidak mengubah total, hanya menambah tersedia (dari rusak ke tersedia)
+    elseif ($jenis_transaksi == 'Perbaikan') {
+        $tersedia_baru += $jumlah; 
+    }
+
+    // Validasi agar tidak minus
+    if ($total_baru < 0 || $tersedia_baru < 0) return false;
+
+    // 1. Update Tabel Buku
+    $sql_update = "UPDATE buku SET Jumlah_Total = ?, Jumlah_Tersedia = ?, Updated_At = NOW() WHERE Id_Buku = ?";
+    $stmt = $conn->prepare($sql_update);
+    $stmt->bind_param("iis", $total_baru, $tersedia_baru, $id_buku);
+    
+    if ($stmt->execute()) {
+        // 2. Catat Riwayat
+        // PERBAIKAN: Menggunakan kolom 'Created_At' dan 'Dilakukan_Oleh' (Bukan 'Tanggal' dan 'Admin_Id')
+        $sql_log = "INSERT INTO riwayat_stok (Id_Buku, Jenis_Transaksi, Jumlah, Keterangan, Created_At, Dilakukan_Oleh) VALUES (?, ?, ?, ?, NOW(), ?)";
+        $stmt_log = $conn->prepare($sql_log);
+        $stmt_log->bind_param("ssiss", $id_buku, $jenis_transaksi, $jumlah, $keterangan, $admin_id);
+        $stmt_log->execute();
+        return true;
+    }
+    return false;
+}
+// ==========================================
+// === SISTEM TRANSAKSI PEMINJAMAN ===
+// ==========================================
+
+// 1. Generate ID Peminjaman (PJ-timestamp)
+function generate_id_peminjaman() {
+    return "PJ-" . date("ymd") . rand(100, 999);
+}
+
+// 2. Ambil Daftar Pengajuan (Filter Status)
+function ambil_pengajuan($status = 'Semua') {
+    global $conn;
+    
+    if ($status == 'Menunggu') {
+        // Menggunakan View sesuai request
+        return $conn->query("SELECT * FROM view_pengajuan_menunggu ORDER BY Tgl_Pengajuan ASC");
+    } else {
+        // Join manual untuk riwayat lengkap
+        $sql = "SELECT p.*, a.Nama_Lengkap, b.Judul, b.Cover_Buku
+                FROM pengajuan_peminjaman p
+                JOIN anggota a ON p.Id_Anggota = a.Id_Anggota
+                JOIN buku b ON p.Id_Buku = b.Id_Buku
+                ORDER BY p.Tgl_Pengajuan DESC";
+        return $conn->query($sql);
+    }
+}
+
+// 3. Ambil Detail 1 Pengajuan
+function ambil_detail_pengajuan($id) {
+    global $conn;
+    // Join lengkap untuk halaman proses
+    $sql = "SELECT p.*, 
+            a.Nama_Lengkap, a.Email, a.No_Telepon, a.Foto_KTP,
+            b.Judul, b.Cover_Buku, b.Penulis, b.Jumlah_Tersedia, b.Lokasi_Rak
+            FROM pengajuan_peminjaman p
+            JOIN anggota a ON p.Id_Anggota = a.Id_Anggota
+            JOIN buku b ON p.Id_Buku = b.Id_Buku
+            WHERE p.Id_Pengajuan = ?";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+// 4. Proses Pengajuan (Panggil Stored Procedure)
+function proses_pengajuan($id_pengajuan, $id_admin, $status, $alasan) {
+    global $conn;
+    
+    $id_peminjaman_baru = generate_id_peminjaman();
+    $pesan_hasil = "";
+
+    // Syntax Panggil SP di MySQL: CALL SP_Nama(param, @output)
+    $sql = "CALL SP_Setujui_Peminjaman(?, ?, ?, ?, ?, @result)";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sssss", $id_pengajuan, $id_admin, $id_peminjaman_baru, $status, $alasan);
+    
+    if ($stmt->execute()) {
+        // Ambil pesan output dari SP
+        $res = $conn->query("SELECT @result as pesan");
+        $row = $res->fetch_assoc();
+        $pesan_hasil = $row['pesan'];
+        
+        // Cek apakah output mengandung kata 'SUCCESS'
+        if (strpos($pesan_hasil, 'SUCCESS') !== false) {
+            return ['status' => 'success', 'pesan' => $pesan_hasil];
+        } else {
+            return ['status' => 'error', 'pesan' => $pesan_hasil];
+        }
+    } else {
+        return ['status' => 'error', 'pesan' => "Database Error: " . $conn->error];
+    }
 }
 ?>

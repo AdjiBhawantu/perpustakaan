@@ -456,7 +456,6 @@
                             <ul class="nav flex-column sub-menu">
                                 <li class="nav-item"> <a class="nav-link" href="buku_daftar.php">Data Buku</a></li>
                                 <li class="nav-item"> <a class="nav-link" href="buku_tambah.php">Tambah Buku</a></li>
-                                <li class="nav-item"> <a class="nav-link" href="buku_stok.php">Cek Stok</a></li>
                                 <li class="nav-item"> <a class="nav-link" href="buku_kategori.php">Kategori</a></li>
                                 <li class="nav-item"> <a class="nav-link" href="buku_riwayat.php">Riwayat Stok</a></li>
                             </ul>
