@@ -92,12 +92,18 @@ include 'includes/header.php';
 
                                 <td>
                                     <a href="anggota_detail.php?id=<?php echo $row['Id_Anggota']; ?>"
-                                        class="btn btn-sm btn-info btn-icon-text">
-                                        <i class="mdi mdi-eye btn-icon-prepend"></i> Detail
+                                        class="btn btn-sm btn-info btn-icon-text" title="Lihat Detail">
+                                        <i class="mdi mdi-eye"></i>
                                     </a>
+
+                                    <a href="anggota_suspend.php?id=<?php echo $row['Id_Anggota']; ?>"
+                                        class="btn btn-sm btn-warning btn-icon-text ml-1" title="Atur Status / Suspend">
+                                        <i class="mdi mdi-account-off"></i>
+                                    </a>
+
                                     <a href="?hapus=<?php echo $row['Id_Anggota']; ?>"
                                         onclick="return confirm('Yakin ingin menghapus anggota ini? Data peminjaman terkait mungkin akan hilang/error.')"
-                                        class="btn btn-sm btn-danger btn-icon-text ml-1">
+                                        class="btn btn-sm btn-danger btn-icon-text ml-1" title="Hapus Permanen">
                                         <i class="mdi mdi-delete"></i>
                                     </a>
                                 </td>

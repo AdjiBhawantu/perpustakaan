@@ -108,14 +108,24 @@ include 'includes/header.php';
                         <a href="anggota_daftar.php" class="btn btn-light border">Kembali</a>
                         <div>
                             <?php if($detail['Status_Verifikasi'] == 'Pending'): ?>
+
                             <a href="anggota_verifikasi.php?aksi=terima&id=<?php echo $detail['Id_Anggota']; ?>"
                                 class="btn btn-success mr-2">Setujui</a>
                             <a href="anggota_verifikasi.php?aksi=tolak&id=<?php echo $detail['Id_Anggota']; ?>"
                                 class="btn btn-danger">Tolak</a>
+
                             <?php else: ?>
+
+                            <a href="anggota_suspend.php?id=<?php echo $detail['Id_Anggota']; ?>"
+                                class="btn btn-warning mr-2 text-white">
+                                <i class="mdi mdi-account-off"></i> Atur Status / Suspend
+                            </a>
+
                             <button type="button" class="btn btn-danger"
-                                onclick="if(confirm('Hapus data ini?')) window.location='anggota_daftar.php?hapus=<?php echo $detail['Id_Anggota']; ?>'">Hapus
-                                Data</button>
+                                onclick="if(confirm('Hapus data ini?')) window.location='anggota_daftar.php?hapus=<?php echo $detail['Id_Anggota']; ?>'">
+                                Hapus Data
+                            </button>
+
                             <?php endif; ?>
                         </div>
                     </div>

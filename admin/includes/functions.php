@@ -207,4 +207,47 @@ function hapus_anggota($id, $admin_id) {
     }
     return false;
 }
+// ==========================================
+// === SISTEM SUSPEND & REAKTIVASI ===
+// ==========================================
+
+// 1. Fungsi Ubah Status (Suspend/Aktifkan)
+function update_status_anggota($id_anggota, $status_baru, $alasan, $admin_id) {
+    global $conn;
+    
+    // Status Akun di Database biasanya: 'Aktif' atau 'Nonaktif'
+    // Kita anggap 'Nonaktif' sebagai Suspend/Blokir
+    
+    $stmt = $conn->prepare("UPDATE anggota SET Status_Akun = ? WHERE Id_Anggota = ?");
+    $stmt->bind_param("ss", $status_baru, $id_anggota);
+    
+    if ($stmt->execute()) {
+        // Catat ke Log Aktivitas sebagai Riwayat
+        $aktivitas = ($status_baru == 'Nonaktif') ? 'Suspend Anggota' : 'Reaktivasi Anggota';
+        $deskripsi = "Mengubah status menjadi $status_baru. Alasan: $alasan";
+        
+        catat_log('Admin', $admin_id, $aktivitas, $deskripsi);
+        
+        // Opsional: Kita juga bisa catat log spesifik ke user tersebut agar muncul di history mereka
+        // Tapi sistem log kita sudah cukup dengan memfilter User_Id nanti.
+        return true;
+    }
+    return false;
+}
+
+// 2. Ambil Riwayat Status (Log Spesifik User)
+function ambil_riwayat_status($id_anggota) {
+    global $conn;
+    // Ambil log yang berkaitan dengan user ini DAN aktivitasnya tentang status
+    $sql = "SELECT * FROM log_aktivitas 
+            WHERE Deskripsi LIKE '%$id_anggota%' 
+            OR (Aktivitas IN ('Suspend Anggota', 'Reaktivasi Anggota', 'Registrasi', 'Approve Anggota') AND Deskripsi LIKE '%$id_anggota%')
+            ORDER BY Created_At DESC";
+            
+    // PENTING: Karena log kita mencatat User_ID si PELAKU (Admin), kita harus cari di deskripsi 
+    // atau kita modifikasi pencatatan lognya. 
+    // Agar aman dengan struktur sekarang, kita cari log admin yang DESKRIPSI-nya mengandung ID Anggota ini.
+    
+    return $conn->query($sql);
+}
 ?>
