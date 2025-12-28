@@ -1,239 +1,332 @@
-<!DOCTYPE html>
-<html lang="id">
+<?php
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perpustakaan - Sistem Peminjaman Buku Digital</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
+include 'includes/header_member.php';
+?>
 
-<body>
-    <nav id="navbar">
-        <a href="#" class="logo">
-            📖 Perpustakaan
-        </a>
-        <div class="nav-container">
-            <ul class="nav-links">
-                <li><a href="#home" class="active">Home</a></li>
-                <li><a href="#catalog">Catalog</a></li>
-                <li><a href="#popular">Buku Terpopuler</a></li>
-                <li><a href="#about">About</a></li>
-            </ul>
-            <a href="login.php" class="login-btn">Login</a>
+<style>
+.duration-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* 4 kolom */
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Sembunyikan radio button asli */
+.duration-option input[type="radio"] {
+    display: none;
+}
+
+/* Style Label sebagai Tombol */
+.duration-option label {
+    display: block;
+    padding: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Efek Hover */
+.duration-option label:hover {
+    border-color: #bee3f8;
+    background: #ebf8ff;
+}
+
+/* State Checked (Saat dipilih) */
+.duration-option input[type="radio"]:checked+label {
+    background: #3182ce;
+    color: white;
+    border-color: #3182ce;
+    box-shadow: 0 4px 6px rgba(49, 130, 206, 0.3);
+    transform: translateY(-2px);
+}
+
+#info-kembali {
+    margin-top: 15px;
+    padding: 10px;
+    background: #f0fff4;
+    border: 1px solid #c6f6d5;
+    border-radius: 8px;
+    color: #2f855a;
+    font-size: 0.9rem;
+    display: none;
+    /* Sembunyi default */
+}
+</style>
+
+<section id="home" class="hero">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">Jelajahi Dunia<br>Lewat <span class="highlight">Buku Digital</span></h1>
+            <p class="hero-subtitle">Akses ribuan koleksi buku terbaik secara gratis. Pinjam buku favoritmu kapan
+                saja dan di mana saja.</p>
+            <div class="hero-buttons">
+                <a href="#catalog" class="cta-btn primary">Mulai Membaca</a>
+                <a href="#popular" class="cta-btn secondary">Lihat Terpopuler</a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-info">
+                        <h4 class="counter" data-target="<?php echo $total_buku; ?>">0</h4>
+                        <p>Koleksi Judul</p>
+                        <span class="stat-sub">✔ <?php echo $buku_tersedia; ?> Copy Tersedia</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h4 class="counter" data-target="<?php echo $total_anggota; ?>">0</h4>
+                        <p>Member Aktif</p>
+                        <span class="stat-sub">Bergabunglah!</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-info">
+                        <h4 class="counter" data-target="<?php echo $total_transaksi; ?>">0</h4>
+                        <p>Transaksi</p>
+                        <span class="stat-sub">Buku dipinjam</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="mobile-menu-btn" id="mobileMenuBtn">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </nav>
 
-    <div class="mobile-menu" id="mobileMenu">
-        <ul class="mobile-nav-links">
-            <li><a href="#home">🏠 Home</a></li>
-            <li><a href="#catalog">📚 Catalog</a></li>
-            <li><a href="#popular">⭐ Buku Terpopuler</a></li>
-            <li><a href="#about">ℹ️ About</a></li>
-            <li><a href="#login" style="background: #3182ce; color: white; text-align: center;">🔐 Login</a></li>
-        </ul>
+        <div class="hero-image">
+            <div class="book-stack">
+                <div class="book book-1"></div>
+                <div class="book book-2"></div>
+                <div class="book book-3"></div>
+            </div>
+        </div>
     </div>
+</section>
 
-    <section class="hero" id="home">
-        <div class="hero-container">
-            <h1>Sistem Peminjaman Buku <span>Digital</span></h1>
-            <p>Pinjam buku favorit Anda dengan mudah dan cepat. Akses ribuan koleksi buku dari berbagai kategori, kelola
-                peminjaman online, dan nikmati kemudahan membaca kapan saja, di mana saja.</p>
-
-            <div class="search-container">
-                <input type="text" placeholder="Cari judul buku, penulis, atau ISBN untuk peminjaman...">
-                <button class="search-btn">🔍 Cari</button>
-            </div>
-
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-number">15,000+</div>
-                    <div class="stat-label">Koleksi Buku</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">8,500+</div>
-                    <div class="stat-label">Anggota Aktif</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">99%</div>
-                    <div class="stat-label">Kepuasan Pengguna</div>
-                </div>
-            </div>
+<section id="catalog" class="catalog-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Katalog <span class="highlight">Terbaru</span></h2>
+            <p class="section-desc">Koleksi buku-buku terbaru yang baru saja mendarat di rak digital kami.</p>
         </div>
-    </section>
-
-    <section class="content" id="catalog">
-        <h2 class="section-title">📚 Katalog Buku Terbaru</h2>
-        <p class="section-subtitle">Jelajahi koleksi buku terbaru yang baru saja ditambahkan ke perpustakaan kami.</p>
 
         <div class="catalog-grid">
-            <div class="card-book">
-                <div class="card-thumb">
-                    📙
-                    <span class="card-badge">Novel</span>
-                </div>
-                <div class="card-body">
-                    <h3 class="card-title">Laut Bercerita</h3>
-                    <div class="card-author">Leila S. Chudori</div>
-                    <div class="card-footer">
-                        <div class="card-rating">⭐ 4.9</div>
-                        <a href="#" class="btn-card-action">Pinjam +</a>
-                    </div>
-                </div>
-            </div>
+            <?php
+                $sql = "SELECT * FROM buku WHERE Status != 'Tidak Tersedia' ORDER BY Created_At DESC LIMIT 8";
+                $result = $conn->query($sql);
 
-            <div class="card-book">
-                <div class="card-thumb">
-                    📘
-                    <span class="card-badge">Teknologi</span>
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $tersedia = $row['Jumlah_Tersedia'] > 0;
+                        $cover = get_cover($row['Cover_Buku']);
+                        $kat_id = $row['Id_Kategori'];
+                        $kat_nm = $conn->query("SELECT Nama_Kategori FROM kategori_buku WHERE Id_Kategori='$kat_id'")->fetch_assoc()['Nama_Kategori'] ?? 'Umum';
+                ?>
+            <div class="book-card">
+                <div class="book-cover">
+                    <img src="<?php echo $cover; ?>" alt="<?php echo $row['Judul']; ?>">
+                    <span class="category-badge"><?php echo $kat_nm; ?></span>
                 </div>
-                <div class="card-body">
-                    <h3 class="card-title">Clean Code</h3>
-                    <div class="card-author">Robert C. Martin</div>
-                    <div class="card-footer">
-                        <div class="card-rating">⭐ 4.8</div>
-                        <a href="#" class="btn-card-action">Pinjam +</a>
-                    </div>
-                </div>
-            </div>
+                <div class="book-info">
+                    <h3 class="book-title"><?php echo $row['Judul']; ?></h3>
+                    <p class="book-author">by <?php echo $row['Penulis']; ?></p>
 
-            <div class="card-book">
-                <div class="card-thumb">
-                    📗
-                    <span class="card-badge">Bisnis</span>
-                </div>
-                <div class="card-body">
-                    <h3 class="card-title">Zero to One</h3>
-                    <div class="card-author">Peter Thiel</div>
-                    <div class="card-footer">
-                        <div class="card-rating">⭐ 4.7</div>
-                        <a href="#" class="btn-card-action">Pinjam +</a>
+                    <div class="book-meta">
+                        <span><?php echo $row['Tahun_Terbit']; ?></span>
+                        <?php if ($tersedia): ?>
+                        <span class="badge badge-success">Stok: <?php echo $row['Jumlah_Tersedia']; ?></span>
+                        <?php else: ?>
+                        <span class="badge badge-danger">Habis</span>
+                        <?php endif; ?>
                     </div>
-                </div>
-            </div>
 
-            <div class="card-book">
-                <div class="card-thumb">
-                    📕
-                    <span class="card-badge">Self Help</span>
-                </div>
-                <div class="card-body">
-                    <h3 class="card-title">Filosofi Teras</h3>
-                    <div class="card-author">Henry Manampiring</div>
-                    <div class="card-footer">
-                        <div class="card-rating">⭐ 4.9</div>
-                        <a href="#" class="btn-card-action">Pinjam +</a>
-                    </div>
-                </div>
-            </div>
-            <div class="card-book">
-                <div class="card-thumb">
-                    📓
-                    <span class="card-badge">Fiksi</span>
-                </div>
-                <div class="card-body">
-                    <h3 class="card-title">Bumi Manusia</h3>
-                    <div class="card-author">Pramoedya A. Toer</div>
-                    <div class="card-footer">
-                        <div class="card-rating">⭐ 5.0</div>
-                        <a href="#" class="btn-card-action">Pinjam +</a>
-                    </div>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                    <?php if ($tersedia): ?>
+                    <button class="borrow-btn btn-primary-action"
+                        onclick="openModal('<?php echo $row['Id_Buku']; ?>', '<?php echo addslashes($row['Judul']); ?>')">Pinjam
+                        Sekarang</button>
+                    <?php else: ?>
+                    <button class="borrow-btn btn-disabled" disabled>Stok Habis</button>
+                    <?php endif; ?>
+                    <?php else: ?>
+                    <a href="login.php" class="borrow-btn btn-primary-action">Login untuk Pinjam</a>
+                    <?php endif; ?>
                 </div>
             </div>
+            <?php 
+                    }
+                } else {
+                    echo "<p style='text-align:center; width:100%; grid-column: 1/-1;'>Belum ada buku tersedia.</p>";
+                }
+                ?>
         </div>
-    </section>
+    </div>
+</section>
 
-    <section class="content" id="popular" style="background-color: #f8fafc; border-radius: 20px;">
-        <h2 class="section-title">🏆 Buku Paling Banyak Dipinjam</h2>
-        <p class="section-subtitle">Daftar buku yang paling populer dan banyak dipinjam oleh anggota perpustakaan minggu
-            ini</p>
-
-        <div class="leaderboard">
-            <div class="book-item">
-                <div class="rank-badge first">1</div>
-                <div class="book-thumbnail">📖</div>
-                <div class="book-details">
-                    <div class="book-title-text">Atomic Habits</div>
-                    <div class="book-author-text">James Clear</div>
-                    <div class="book-metrics">
-                        <span class="metric"><span class="metric-icon">👁️</span> 1,234</span>
-                        <span class="metric"><span class="metric-icon">⭐</span> 4.8/5</span>
-                        <span class="metric"><span class="metric-icon">📥</span> 456 peminjaman</span>
-                    </div>
-                </div>
-                <span class="trending-up">↗ Trending</span>
-                <button class="borrow-btn">Pinjam Sekarang</button>
-            </div>
-
-            <div class="book-item">
-                <div class="rank-badge second">2</div>
-                <div class="book-thumbnail">📕</div>
-                <div class="book-details">
-                    <div class="book-title-text">Sapiens: A Brief History</div>
-                    <div class="book-author-text">Yuval Noah Harari</div>
-                    <div class="book-metrics">
-                        <span class="metric"><span class="metric-icon">👁️</span> 1,089</span>
-                        <span class="metric"><span class="metric-icon">⭐</span> 4.7/5</span>
-                        <span class="metric"><span class="metric-icon">📥</span> 398 peminjaman</span>
-                    </div>
-                </div>
-                <span class="trending-up">↗ Trending</span>
-                <button class="borrow-btn">Pinjam Sekarang</button>
-            </div>
-
-            <div class="book-item">
-                <div class="rank-badge third">3</div>
-                <div class="book-thumbnail">📗</div>
-                <div class="book-details">
-                    <div class="book-title-text">The Psychology of Money</div>
-                    <div class="book-author-text">Morgan Housel</div>
-                    <div class="book-metrics">
-                        <span class="metric"><span class="metric-icon">👁️</span> 987</span>
-                        <span class="metric"><span class="metric-icon">⭐</span> 4.9/5</span>
-                        <span class="metric"><span class="metric-icon">📥</span> 367 peminjaman</span>
-                    </div>
-                </div>
-                <button class="borrow-btn">Pinjam Sekarang</button>
-            </div>
-
-            <div class="book-item">
-                <div class="rank-badge other">4</div>
-                <div class="book-thumbnail">📘</div>
-                <div class="book-details">
-                    <div class="book-title-text">Deep Work</div>
-                    <div class="book-author-text">Cal Newport</div>
-                    <div class="book-metrics">
-                        <span class="metric"><span class="metric-icon">👁️</span> 876</span>
-                        <span class="metric"><span class="metric-icon">⭐</span> 4.6/5</span>
-                        <span class="metric"><span class="metric-icon">📥</span> 334 peminjaman</span>
-                    </div>
-                </div>
-                <button class="borrow-btn">Pinjam Sekarang</button>
-            </div>
-
-            <div class="book-item">
-                <div class="rank-badge other">5</div>
-                <div class="book-thumbnail">📙</div>
-                <div class="book-details">
-                    <div class="book-title-text">Thinking, Fast and Slow</div>
-                    <div class="book-author-text">Daniel Kahneman</div>
-                    <div class="book-metrics">
-                        <span class="metric"><span class="metric-icon">👁️</span> 823</span>
-                        <span class="metric"><span class="metric-icon">⭐</span> 4.5/5</span>
-                        <span class="metric"><span class="metric-icon">📥</span> 312 peminjaman</span>
-                    </div>
-                </div>
-                <button class="borrow-btn">Pinjam Sekarang</button>
-            </div>
+<section id="popular" class="popular-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Paling Sering <span class="highlight">Dipinjam</span></h2>
+            <p class="section-desc">Buku-buku favorit yang paling banyak dibaca oleh anggota kami.</p>
         </div>
-    </section>
 
-    <script src="assets/js/script.js"></script>
+        <div class="popular-grid">
+            <?php
+                $sql_pop = "SELECT * FROM buku ORDER BY Jumlah_Dipinjam DESC LIMIT 3";
+                $res_pop = $conn->query($sql_pop);
+                $rank = 1;
+
+                while ($row = $res_pop->fetch_assoc()) {
+                    $cover = get_cover($row['Cover_Buku']);
+                    $rank_class = ($rank == 1) ? 'rank-1' : (($rank == 2) ? 'rank-2' : 'rank-3');
+                ?>
+            <div class="popular-card">
+                <div class="rank-number <?php echo $rank_class; ?>">#<?php echo $rank; ?></div>
+                <div class="pop-thumb"><img src="<?php echo $cover; ?>" alt="Cover"></div>
+                <div class="pop-details">
+                    <div class="pop-title"><?php echo $row['Judul']; ?></div>
+                    <div class="book-author" style="margin-bottom: 5px;"><?php echo $row['Penulis']; ?></div>
+                    <div class="pop-stats">🔥 <?php echo $row['Jumlah_Dipinjam']; ?>x Dipinjam</div>
+
+                    <div style="margin-top: 15px;">
+                        <?php if (isset($_SESSION['user_id']) && $row['Jumlah_Tersedia'] > 0): ?>
+                        <button class="borrow-btn btn-primary-action" style="padding: 8px; font-size: 0.9rem;"
+                            onclick="openModal('<?php echo $row['Id_Buku']; ?>', '<?php echo addslashes($row['Judul']); ?>')">Pinjam</button>
+                        <?php else: ?>
+                        <a href="login.php" class="borrow-btn btn-primary-action"
+                            style="padding: 8px; font-size: 0.9rem;">Lihat</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <?php $rank++; } ?>
+        </div>
+    </div>
+</section>
+
+<div id="borrowModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h2 style="color: #2d3748; margin-bottom: 20px;">📚 Ajukan Peminjaman</h2>
+
+        <form method="POST" action="">
+            <input type="hidden" name="ajukan_pinjam" value="1">
+            <input type="hidden" id="modal_id_buku" name="id_buku">
+
+            <div class="form-group">
+                <label>Judul Buku</label>
+                <input type="text" id="modal_judul_buku" class="form-control" readonly
+                    style="background: #f7fafc; color:#718096;">
+            </div>
+
+            <div class="form-group">
+                <label>Berapa lama Anda ingin meminjam?</label>
+                <div class="duration-grid">
+                    <?php for($i=1; $i<=7; $i++): ?>
+                    <div class="duration-option">
+                        <input type="radio" name="durasi" id="hari_<?php echo $i; ?>" value="<?php echo $i; ?>"
+                            <?php echo ($i==7) ? 'checked' : ''; ?> onchange="hitungTanggal(this.value)">
+                        <label for="hari_<?php echo $i; ?>"><?php echo $i; ?> Hari</label>
+                    </div>
+                    <?php endfor; ?>
+                </div>
+
+                <div id="info-kembali">
+                    <i class="fa fa-calendar-check-o"></i> Estimasi Pengembalian: <b id="tgl_kembali_text">-</b>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Catatan (Opsional)</label>
+                <textarea name="catatan" class="form-control" rows="2"
+                    placeholder="Keperluan tugas / penelitian..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Kirim Pengajuan</button>
+        </form>
+    </div>
+</div>
+
+<footer style="background: #1a202c; color: white; padding: 60px 0;">
+    <div class="container" style="text-align: center;">
+        <h3 style="font-size: 1.8rem; margin-bottom: 10px;">📖 LibraryHub</h3>
+        <p style="color: #a0aec0; max-width: 500px; margin: 0 auto;">Platform perpustakaan digital modern untuk masa
+            depan pendidikan yang lebih baik.</p>
+        <div
+            style="margin-top: 40px; border-top: 1px solid #2d3748; padding-top: 20px; font-size: 0.9rem; color: #718096;">
+            Copyright © 2025 LibraryHub. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<script>
+// Modal Logic
+const modal = document.getElementById("borrowModal");
+const idInput = document.getElementById("modal_id_buku");
+const judulInput = document.getElementById("modal_judul_buku");
+
+function openModal(id, judul) {
+    modal.style.display = "block";
+    idInput.value = id;
+    judulInput.value = judul;
+
+    // Reset dan Trigger perhitungan tanggal default (7 hari)
+    document.getElementById("hari_7").checked = true;
+    hitungTanggal(7);
+}
+
+function closeModal() {
+    modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) closeModal();
+}
+
+// Logic Hitung Tanggal Kembali (JS)
+function hitungTanggal(durasi) {
+    const today = new Date();
+    const returnDate = new Date(today);
+    returnDate.setDate(today.getDate() + parseInt(durasi));
+
+    // Format Tanggal Indonesia (dd Mei yyyy)
+    const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+    const dateStr = returnDate.toLocaleDateString('id-ID', options);
+
+    document.getElementById('tgl_kembali_text').innerText = dateStr;
+    document.getElementById('info-kembali').style.display = 'block';
+}
+
+// Animasi Counter Angka
+const counters = document.querySelectorAll('.counter');
+const speed = 200;
+
+counters.forEach(counter => {
+    const updateCount = () => {
+        const target = +counter.getAttribute('data-target');
+        const count = +counter.innerText;
+        const inc = target / speed;
+
+        if (count < target) {
+            counter.innerText = Math.ceil(count + inc);
+            setTimeout(updateCount, 20);
+        } else {
+            counter.innerText = target;
+        }
+    };
+    updateCount();
+});
+</script>
 </body>
 
 </html>
