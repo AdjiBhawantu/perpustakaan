@@ -508,7 +508,7 @@ function get_cover($filename) {
                 <li><a href="index.php?#home" class="active">Home</a></li>
                 <li><a href="index.php?#catalog">Katalog</a></li>
                 <li><a href="index.php?#popular">Terpopuler</a></li>
-                <li><a href="status_peminjaman.php">Status Peminjaman</a></li>
+                <li><a href="status_peminjaman.php?$id_anggota">Status Peminjaman</a></li>
             </ul>
 
             <?php if (isset($_SESSION['user_id'])): ?>

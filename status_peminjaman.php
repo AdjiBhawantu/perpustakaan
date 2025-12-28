@@ -1,17 +1,28 @@
 <?php
 include 'includes/header_member.php';
-// --- LOGIKA NOTIFIKASI & DETEKSI TANGGAL ---
+
+// --- 1. CEK LOGIN & DEFINISI VARIABEL (FIX ERROR) ---
+if (!isset($_SESSION['user_id'])) {
+    echo "<script>alert('Silakan login terlebih dahulu!'); window.location='login.php';</script>";
+    exit;
+}
+
+$id_anggota = $_SESSION['user_id']; // Mengambil ID dari session
+$email_anggota = $_SESSION['email'] ?? 'email@contoh.com';
+
+// --- 2. LOGIKA NOTIFIKASI & DETEKSI TANGGAL ---
 $notifikasi = [];
 $kirim_email = false;
 
-// Cek buku yang sedang dipinjam
+// Cek buku yang sedang dipinjam untuk notifikasi
 $sql_cek = "SELECT b.Judul, p.Tgl_Kembali_Rencana, DATEDIFF(p.Tgl_Kembali_Rencana, CURRENT_DATE()) as Sisa_Hari 
             FROM peminjaman p 
             JOIN buku b ON p.Id_Buku = b.Id_Buku 
             WHERE p.Id_Anggota = '$id_anggota' AND p.Status_Peminjaman = 'Dipinjam'";
+            
 $res_cek = $conn->query($sql_cek);
 
-if ($res_cek->num_rows > 0) {
+if ($res_cek && $res_cek->num_rows > 0) {
     while ($row = $res_cek->fetch_assoc()) {
         $sisa = $row['Sisa_Hari'];
         $judul = $row['Judul'];
@@ -23,7 +34,7 @@ if ($res_cek->num_rows > 0) {
                 'type' => 'danger',
                 'msg' => "🚨 <b>TERLAMBAT!</b> Buku <i>'$judul'</i> sudah lewat jatuh tempo $telat hari. Segera kembalikan!"
             ];
-            $kirim_email = true; // Trigger email
+            $kirim_email = true; 
         }
         // Kondisi 2: Jatuh Tempo Hari Ini (Sisa 0)
         elseif ($sisa == 0) {
@@ -31,7 +42,7 @@ if ($res_cek->num_rows > 0) {
                 'type' => 'warning',
                 'msg' => "⚠️ <b>HARI INI!</b> Batas pengembalian buku <i>'$judul'</i> adalah hari ini."
             ];
-            $kirim_email = true; // Trigger email
+            $kirim_email = true; 
         }
         // Kondisi 3: Besok (Sisa 1)
         elseif ($sisa == 1) {
@@ -43,9 +54,8 @@ if ($res_cek->num_rows > 0) {
     }
 }
 
-// --- SIMULASI KIRIM EMAIL (BACKEND LOGIC) ---
+// --- 3. SIMULASI KIRIM EMAIL ---
 if ($kirim_email) {
-    // Di sini Anda bisa menggunakan PHPMailer
     $email_status = "<div class='alert alert-success'><i class='fa fa-envelope'></i> Notifikasi pengingat telah dikirim ke email: <b>$email_anggota</b></div>";
 }
 ?>
@@ -74,15 +84,15 @@ if ($kirim_email) {
                 <thead style="background: #3182ce; color: white;">
                     <tr>
                         <th style="padding: 15px; text-align: left;">Buku</th>
-                        <th style="padding: 15px;">Tanggal Pinjam</th>
-                        <th style="padding: 15px;">Jatuh Tempo</th>
-                        <th style="padding: 15px;">Status</th>
-                        <th style="padding: 15px;">Denda</th>
+                        <th style="padding: 15px; text-align: center;">Tanggal Pinjam</th>
+                        <th style="padding: 15px; text-align: center;">Jatuh Tempo</th>
+                        <th style="padding: 15px; text-align: center;">Status</th>
+                        <th style="padding: 15px; text-align: center;">Denda</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    // PERBAIKAN QUERY: Menambahkan Subquery untuk mengambil total Denda dari tabel denda
+                    // Query mengambil data peminjaman & total denda
                     $sql = "SELECT p.*, b.Judul, b.Cover_Buku,
                             (SELECT SUM(Total_Denda) FROM denda WHERE Id_Peminjaman = p.Id_Peminjaman) as Denda
                             FROM peminjaman p 
@@ -98,7 +108,6 @@ if ($kirim_email) {
                             $tgl_kembali = strtotime($row['Tgl_Kembali_Rencana']);
                             $now = time();
                             
-                            // Hitung telat hanya jika status masih Dipinjam
                             $hari_telat = 0;
                             if($row['Status_Peminjaman'] == 'Dipinjam') {
                                 $selisih = $now - $tgl_kembali;
@@ -119,10 +128,10 @@ if ($kirim_email) {
                                 $status_badge = "<span class='badge badge-warning'>{$row['Status_Peminjaman']}</span>";
                             }
 
-                            // Gambar
+                            // Gambar Cover
                             $cover = !empty($row['Cover_Buku']) ? "uploads/buku/".$row['Cover_Buku'] : "assets/images/no-cover.png";
                             
-                            // Ambil nilai denda, default 0 jika null
+                            // Nilai Denda
                             $nilai_denda = $row['Denda'] ?? 0;
                             ?>
                     <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -137,19 +146,22 @@ if ($kirim_email) {
                             </div>
                         </td>
                         <td style="padding: 15px; text-align: center;">
-                            <?php echo date('d M Y', strtotime($row['Tgl_Pinjam'])); ?></td>
+                            <?php echo date('d M Y', strtotime($row['Tgl_Pinjam'])); ?>
+                        </td>
                         <td style="padding: 15px; text-align: center; font-weight: bold;">
                             <?php echo date('d M Y', strtotime($row['Tgl_Kembali_Rencana'])); ?>
                         </td>
-                        <td style="padding: 15px; text-align: center;"><?php echo $status_badge; ?></td>
+                        <td style="padding: 15px; text-align: center;">
+                            <?php echo $status_badge; ?>
+                        </td>
                         <td style="padding: 15px; text-align: center;">
                             <?php 
-                                    if ($nilai_denda > 0) {
-                                        echo "<span style='color: #c53030; font-weight: bold;'>Rp " . number_format($nilai_denda, 0, ',', '.') . "</span>";
-                                    } else {
-                                        echo "-";
-                                    }
-                                    ?>
+                            if ($nilai_denda > 0) {
+                                echo "<span style='color: #c53030; font-weight: bold;'>Rp " . number_format($nilai_denda, 0, ',', '.') . "</span>";
+                            } else {
+                                echo "-";
+                            }
+                            ?>
                         </td>
                     </tr>
                     <?php
