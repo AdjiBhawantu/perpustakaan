@@ -135,6 +135,8 @@
         border: 3px solid white;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         margin-bottom: 10px;
+        object-fit: cover;
+        /* Agar gambar tidak gepeng */
     }
 
     .user-profile .user-name {
@@ -402,16 +404,40 @@
 
             <nav class="sidebar sidebar-offcanvas" id="sidebar">
 
+                <?php
+                // Default value
+                $nav_id = $_SESSION['user_id'] ?? '';
+                $nav_nama = $_SESSION['nama'] ?? 'Administrator';
+                $nav_role = $_SESSION['role'] ?? 'Super Admin';
+                
+                // Set default avatar
+                $nav_avatar = "https://ui-avatars.com/api/?name=".urlencode($nav_nama)."&background=3182ce&color=fff";
+
+                // Query ke database jika koneksi tersedia
+                if (!empty($nav_id) && isset($conn)) {
+                    $q_nav = $conn->query("SELECT Foto, Nama_Lengkap, Role FROM admin WHERE Id_Admin = '$nav_id'");
+                    if ($q_nav && $q_nav->num_rows > 0) {
+                        $d_nav = $q_nav->fetch_assoc();
+                        $nav_nama = $d_nav['Nama_Lengkap']; // Update nama terbaru
+                        $nav_role = $d_nav['Role']; // Update role terbaru
+                        
+                        // Cek File Foto
+                        if (!empty($d_nav['Foto']) && file_exists("../uploads/profil/" . $d_nav['Foto'])) {
+                            $nav_avatar = "../uploads/profil/" . $d_nav['Foto'];
+                        }
+                    }
+                }
+                ?>
+
                 <div class="user-profile">
                     <div class="user-image">
-                        <img src="images/faces/face28.png" alt="profile"
-                            onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['nama'] ?? 'Admin'); ?>&background=3182ce&color=fff'">
+                        <img src="<?php echo $nav_avatar; ?>" alt="profile">
                     </div>
                     <div class="user-name">
-                        <?php echo $_SESSION['nama'] ?? 'Administrator'; ?>
+                        <?php echo $nav_nama; ?>
                     </div>
                     <div class="user-designation">
-                        <?php echo $_SESSION['role'] ?? 'Super Admin'; ?>
+                        <?php echo $nav_role; ?>
                     </div>
                 </div>
 
@@ -542,4 +568,3 @@
 
             <div class="main-panel">
                 <div class="content-wrapper">
-                    ```

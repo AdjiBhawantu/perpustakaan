@@ -72,13 +72,21 @@ include 'includes/header.php';
                             $q = $conn->query("SELECT * FROM admin ORDER BY Created_At DESC");
                             while($row = $q->fetch_assoc()) {
                                 $badge = ($row['Status'] == 'Aktif') ? 'success' : 'danger';
-                                $avatar = "https://ui-avatars.com/api/?name=".urlencode($row['Nama_Lengkap'])."&background=random";
+                                
+                                // --- LOGIKA FOTO PROFIL (PERBAIKAN DI SINI) ---
+                                // Cek apakah kolom Foto ada isinya DAN filenya benar-benar ada
+                                if (!empty($row['Foto']) && file_exists("../uploads/profil/" . $row['Foto'])) {
+                                    $avatar = "../uploads/profil/" . $row['Foto'];
+                                } else {
+                                    // Jika tidak ada, pakai UI Avatars (Inisial Nama)
+                                    $avatar = "https://ui-avatars.com/api/?name=".urlencode($row['Nama_Lengkap'])."&background=random&color=fff&size=128";
+                                }
                             ?>
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <img src="<?php echo $avatar; ?>" class="rounded-circle mr-2"
-                                            style="width:40px; height:40px;">
+                                            style="width:40px; height:40px; object-fit: cover; border: 1px solid #ddd;">
                                         <div>
                                             <span
                                                 class="font-weight-bold"><?php echo $row['Nama_Lengkap']; ?></span><br>
