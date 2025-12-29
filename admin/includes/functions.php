@@ -407,4 +407,143 @@ function proses_pengajuan($id_pengajuan, $id_admin, $status, $alasan) {
         return ['status' => 'error', 'pesan' => "Database Error: " . $conn->error];
     }
 }
+// ==========================================
+// === SISTEM PENGATURAN (SETTINGS) ===
+// ==========================================
+
+// 1. Ambil Data Pengaturan
+function ambil_pengaturan() {
+    global $conn;
+    $res = $conn->query("SELECT * FROM pengaturan WHERE Id = 1");
+    if ($res->num_rows > 0) {
+        return $res->fetch_assoc();
+    }
+    // Return default jika kosong
+    return [
+        'Nama_Perpus' => 'LibraryHub',
+        'Denda_Per_Hari' => 1000,
+        'Durasi_Pinjam' => 7,
+        'Max_Pinjam' => 3
+    ];
+}
+
+// 2. Update Pengaturan
+function update_pengaturan($data) {
+    global $conn;
+    $nama = clean_input($data['nama']);
+    $alamat = clean_input($data['alamat']);
+    $email = clean_input($data['email']);
+    $telp = clean_input($data['telepon']);
+    $denda = (int)$data['denda'];
+    $durasi = (int)$data['durasi'];
+    $max = (int)$data['max_pinjam'];
+    $rusak_k = (int)$data['rusak_kecil'];
+    $rusak_b = (int)$data['rusak_besar'];
+    $hilang = (int)$data['hilang'];
+
+    $sql = "UPDATE pengaturan SET 
+            Nama_Perpus=?, Alamat=?, Email=?, No_Telepon=?, 
+            Denda_Per_Hari=?, Durasi_Pinjam=?, Max_Pinjam=?,
+            Biaya_Rusak_Ringan=?, Biaya_Rusak_Berat=?, Biaya_Hilang=?
+            WHERE Id = 1";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssiiiiii", $nama, $alamat, $email, $telp, $denda, $durasi, $max, $rusak_k, $rusak_b, $hilang);
+    return $stmt->execute();
+}
+
+// ==========================================
+// === MANAJEMEN ADMIN (CRUD) ===
+// ==========================================
+
+// 1. Tambah Admin Baru
+function tambah_admin($data) {
+    global $conn;
+    $username = clean_input($data['username']);
+    
+    // Cek Username
+    $cek = $conn->query("SELECT Username FROM admin WHERE Username='$username'");
+    if($cek->num_rows > 0) return ['status'=>'error', 'pesan'=>'Username sudah digunakan!'];
+
+    $nama = clean_input($data['nama']);
+    $email = clean_input($data['email']);
+    $telp = clean_input($data['telepon']);
+    $password = md5($data['password']); // MD5 sesuai sistem login Anda
+    $role = clean_input($data['role']);
+    $id_admin = "ADM-" . time();
+
+    $sql = "INSERT INTO admin (Id_Admin, Username, Password, Nama_Lengkap, Email, No_Telepon, Role, Status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'Aktif')";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sssssss", $id_admin, $username, $password, $nama, $email, $telp, $role);
+    
+    if($stmt->execute()) return ['status'=>'success', 'pesan'=>'Admin berhasil ditambahkan'];
+    return ['status'=>'error', 'pesan'=>'Gagal menambah admin'];
+}
+
+// 2. Edit Admin
+function edit_admin($data) {
+    global $conn;
+    $id = clean_input($data['id_admin']);
+    $nama = clean_input($data['nama']);
+    $email = clean_input($data['email']);
+    $telp = clean_input($data['telepon']);
+    $role = clean_input($data['role']);
+    $status = clean_input($data['status']);
+
+    $sql = "UPDATE admin SET Nama_Lengkap=?, Email=?, No_Telepon=?, Role=?, Status=? WHERE Id_Admin=?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssss", $nama, $email, $telp, $role, $status, $id);
+    
+    if(!empty($data['password'])) {
+        $pass = md5($data['password']);
+        $conn->query("UPDATE admin SET Password='$pass' WHERE Id_Admin='$id'");
+    }
+
+    if($stmt->execute()) return true;
+    return false;
+}
+
+// 3. Backup Database (Simple SQL Dump)
+function backup_database() {
+    global $conn;
+    // Logika backup sederhana: Ambil semua tabel dan strukturnya
+    $tables = [];
+    $result = $conn->query("SHOW TABLES");
+    while($row = $result->fetch_row()) {
+        $tables[] = $row[0];
+    }
+
+    $return = "";
+    foreach($tables as $table) {
+        $result = $conn->query("SELECT * FROM $table");
+        $num_fields = $result->field_count;
+        
+        $return .= "DROP TABLE IF EXISTS $table;";
+        $row2 = $conn->query("SHOW CREATE TABLE $table")->fetch_row();
+        $return .= "\n\n".$row2[1].";\n\n";
+        
+        for ($i = 0; $i < $num_fields; $i++) {
+            while($row = $result->fetch_row()) {
+                $return .= "INSERT INTO $table VALUES(";
+                for($j=0; $j<$num_fields; $j++) {
+                    $row[$j] = addslashes($row[$j]);
+                    $row[$j] = str_replace("\n","\\n",$row[$j]);
+                    if (isset($row[$j])) { $return .= '"'.$row[$j].'"' ; } else { $return .= '""'; }
+                    if ($j<($num_fields-1)) { $return.= ','; }
+                }
+                $return .= ");\n";
+            }
+        }
+        $return .="\n\n\n";
+    }
+    
+    // Force Download
+    $filename = 'backup-db-'.date('Y-m-d-H-i-s').'.sql';
+    header('Content-Type: application/octet-stream');
+    header("Content-Transfer-Encoding: Binary"); 
+    header("Content-disposition: attachment; filename=\"".$filename."\""); 
+    echo $return; 
+    exit;
+}
 ?>
